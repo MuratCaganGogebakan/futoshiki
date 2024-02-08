@@ -26,7 +26,7 @@ const dummyData = {
 export const Main = () => {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <FutoshikiGrid grid={dummyData.grid} constraints={dummyData.constraints} />
+      <FutoshikiGrid initialGrid={dummyData.grid} constraints={dummyData.constraints} />
     </View>
   )
 }
