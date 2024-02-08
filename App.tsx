@@ -1,20 +1,42 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { useFonts } from "expo-font";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-export default function App() {
+import { Main } from "./src/screens/Main";
+import { RootStackParamList } from "./src/types";
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+function App() {
+
+  const [fontsLoaded] = useFonts({
+    "outfit-bold": require("./assets/fonts/Outfit-Bold.ttf"),
+    "outfit-light": require("./assets/fonts/Outfit-Light.ttf"),
+    "outfit-medium": require("./assets/fonts/Outfit-Medium.ttf"),
+    "outfit-regular": require("./assets/fonts/Outfit-Regular.ttf"),
+    "outfit-semibold": require("./assets/fonts/Outfit-SemiBold.ttf"),
+  });
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <NavigationContainer>
+        <Stack.Navigator
+          initialRouteName="Main"
+          screenOptions={{
+            headerShown: false,
+            gestureEnabled: true,
+            gestureDirection: "horizontal",
+          }}
+        >
+          <Stack.Screen name="Main" component={Main} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </GestureHandlerRootView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default App;
