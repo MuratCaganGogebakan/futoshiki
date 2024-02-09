@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { View, StyleSheet, Pressable } from "react-native";
+import { useEffect, useState } from "react";
+import { View, StyleSheet, Pressable, Button } from "react-native";
 
 import { CustomText } from "../CustomText";
 
@@ -17,19 +17,64 @@ export const FutoshikiGrid: React.FC<GridProps> = ({
   initialGrid,
   constraints,
 }) => {
-  const [grid, setGrid] = useState<Cell[][]>(initialGrid); // Manage grid state
+  const [grid, setGrid] = useState<Cell[][]>(initialGrid);
   const [selectedCell, setSelectedCell] = useState<[number, number] | null>(
     null,
   );
+  const [isCorrect, setIsCorrect] = useState<boolean>(false);
+
+  useEffect(() => {
+    validateBoard();
+    console.log("isCorrect", isCorrect);
+  }, [grid]);
 
   const onCellUpdate = (rowIndex: number, cellIndex: number, value: number) => {
-    const newGrid = grid.map((row, rIndex) => {
-      if (rIndex === rowIndex) {
-        return row.map((cell, cIndex) => (cIndex === cellIndex ? value : cell));
-      }
-      return row;
-    });
+    const newGrid = grid.map((row, rIndex) =>
+      rIndex === rowIndex
+        ? row.map((cell, cIndex) => (cIndex === cellIndex ? value : cell))
+        : row,
+    );
     setGrid(newGrid);
+  };
+
+  const resetBoard = () => {
+    setGrid(initialGrid);
+  };
+
+  const validateBoard = () => {
+    if (grid.flat().some((cell) => cell === 0)) {
+      setIsCorrect(false);
+      return;
+    }
+    const isValidRowsAndColumns = validateRowsAndColumns(grid);
+    const isValidConstraints = validateConstraints(grid, constraints);
+    setIsCorrect(isValidRowsAndColumns && isValidConstraints);
+  };
+
+  const validateRowsAndColumns = (grid: Cell[][]) => {
+    for (let i = 0; i < grid.length; i++) {
+      const row = grid[i];
+      const col = grid.map((r) => r[i]);
+      if (!isUnique(row) || !isUnique(col)) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const isUnique = (arr: Cell[]) => {
+    const filtered = arr.filter((cell) => cell !== 0);
+    return new Set(filtered).size === filtered.length;
+  };
+
+  const validateConstraints = (grid: Cell[][], constraints: Constraint[]) => {
+    return constraints.every(({ cell1, cell2 }) => {
+      const [r1, c1] = cell1;
+      const [r2, c2] = cell2;
+      const val1 = grid[r1][c1];
+      const val2 = grid[r2][c2];
+      return val1 === 0 || val2 === 0 || val1 > val2;
+    });
   };
 
   const renderCell = (value: Cell, rowIndex: number, cellIndex: number) => {
@@ -93,6 +138,8 @@ export const FutoshikiGrid: React.FC<GridProps> = ({
   const renderConstraint = (constraint: Constraint) => {
     const { cell1, cell2 } = constraint;
     const [row1, col1] = cell1;
+    const [row2, col2] = cell2;
+    const [minRow, minCol] = [Math.min(row1, row2), Math.min(col1, col2)];
     const isHorizontal = row1 === cell2[0];
 
     const type = isHorizontal
@@ -105,7 +152,7 @@ export const FutoshikiGrid: React.FC<GridProps> = ({
 
     const style = {
       ...styles.constraint,
-      ...calculateConstraintPosition(row1, col1, isHorizontal),
+      ...calculateConstraintPosition(minRow, minCol, isHorizontal),
       transform: isHorizontal ? [] : [{ rotate: "90deg" }],
     };
 
@@ -129,6 +176,7 @@ export const FutoshikiGrid: React.FC<GridProps> = ({
         {constraints.map(renderConstraint)}
       </View>
       {renderNumberSelector()}
+      <Button title="Clear Board" onPress={resetBoard} />
     </View>
   );
 };
